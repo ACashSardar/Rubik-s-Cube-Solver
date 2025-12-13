@@ -1,18 +1,17 @@
 package solver;
 
-import solver.Cube;
-
 import java.util.Arrays;
 
 public class Roux {
 
-    char fnt, btm, lft, rgc, top, bck;
+    int totalMoveCount=0;
+    char fnt, btm, lft, rht, top, bck;
 
     public Roux(solver.Cube cube) {
         fnt = cube.colorMap[0];
         btm = cube.colorMap[5];
         lft = cube.colorMap[3];
-        rgc = cube.colorMap[1];
+        rht = cube.colorMap[1];
         top = cube.colorMap[4];
         bck = cube.colorMap[2];
     }
@@ -20,40 +19,74 @@ public class Roux {
     public void moveExecutor(Cube cube, String moves) {
         String[] arr = moves.split(" ");
         for (String mv : arr) {
-            if (mv.equals(""))
-                continue;
-            else if (mv.equals("U"))
-                cube.moveU();
-            else if (mv.equals("U'"))
-                cube.moveUp();
-            else if (mv.equals("F"))
-                cube.moveF();
-            else if (mv.equals("F'"))
-                cube.moveFp();
-            else if (mv.equals("R"))
-                cube.moveR();
-            else if (mv.equals("R'"))
-                cube.moveRp();
-            else if (mv.equals("L"))
-                cube.moveL();
-            else if (mv.equals("L'"))
-                cube.moveLp();
-            else if (mv.equals("M"))
-                cube.moveM();
-            else if (mv.equals("M'"))
-                cube.moveMp();
-            else if (mv.equals("D"))
-                cube.moveD();
-            else if (mv.equals("D'"))
-                cube.moveDp();
-            else if (mv.equals("Rw"))
-                cube.moveWideR();
-            else if (mv.equals("Rw'"))
-                cube.moveWideRp();
+            switch (mv) {
+                case "U":
+                    cube.moveU();
+                    break;
+                case "U'":
+                    cube.moveUp();
+                    break;
+                case "F":
+                    cube.moveF();
+                    break;
+                case "F'":
+                    cube.moveFp();
+                    break;
+                case "R":
+                    cube.moveR();
+                    break;
+                case "R'":
+                    cube.moveRp();
+                    break;
+                case "L":
+                    cube.moveL();
+                    break;
+                case "L'":
+                    cube.moveLp();
+                    break;
+                case "M":
+                    cube.moveM();
+                    break;
+                case "M'":
+                    cube.moveMp();
+                    break;
+                case "D":
+                    cube.moveD();
+                    break;
+                case "D'":
+                    cube.moveDp();
+                    break;
+                case "Rw":
+                    cube.moveWideR();
+                    break;
+                case "Rw'":
+                    cube.moveWideRp();
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
     public String moveOptimizer(String moves) {
+        moves=moveOptimizerRec(moves);
+        String[] arr=moves.split(" ");
+        StringBuilder sb=new StringBuilder();
+        int cnt=0;
+        for(int i=0; i<arr.length; i++) {
+            if(i<arr.length-1 && arr[i].equals(arr[i+1])) {
+                sb.append(arr[i]+"2 ");
+                i++;
+            }else {
+                sb.append(arr[i]+" ");
+            }
+            cnt++;
+        }
+        totalMoveCount+=cnt;
+        return sb.toString()+" ("+cnt+")";
+    }
+
+    public String moveOptimizerRec(String moves) {
         // 1. If 4 consecutive elements are same, discard the entire sequence of 4 moves
         // 2. If 3 consecutive elements are same, replace them with opposite moves.
         // 3. If 2 consecutive moves are exactly opposite, skip them.
@@ -80,7 +113,7 @@ public class Roux {
         if (sb.toString().trim().length() == moves.trim().length()) {
             return sb.toString().trim();
         }
-        return moveOptimizer(sb.toString());
+        return moveOptimizerRec(sb.toString());
     }
 
     // -------------------- BLOCK BUILDING STEPS --------------------//
@@ -172,7 +205,6 @@ public class Roux {
          * 2. Check if this piece exists on top layer. If yes bring it to the center &
          * then do M
          ***/
-        int cnt = 0;
         boolean found = false;
         mv = "";
         for (int i = 0; i < 4; i++) {
@@ -408,79 +440,79 @@ public class Roux {
 
     public void insertRightBottomEdge(Cube cube) {
         String moves = "";
-        char rgc = cube.colorMap[1];
+        char rht = cube.colorMap[1];
         char btm = cube.colorMap[5];
         // Only 18 cases are there
         // Already in the correct place and correct orientation
-        if (cube.arr[1][2][1] == rgc && cube.arr[5][1][2] == btm) {
+        if (cube.arr[1][2][1] == rht && cube.arr[5][1][2] == btm) {
 
         }
         // Correct place but wrong orientation.
-        else if (cube.arr[1][2][1] == btm && cube.arr[5][1][2] == rgc) {
+        else if (cube.arr[1][2][1] == btm && cube.arr[5][1][2] == rht) {
             moves = "R R U Rw U R' R'";
         }
         // The edge is between front & right. Orientation is correct.
-        else if (cube.arr[0][1][2] == btm && cube.arr[1][1][0] == rgc) {
+        else if (cube.arr[0][1][2] == btm && cube.arr[1][1][0] == rht) {
             moves = "R'";
         }
         // The edge is between front & right. Orientation is not correct.
-        else if (cube.arr[0][1][2] == rgc && cube.arr[1][1][0] == btm) {
+        else if (cube.arr[0][1][2] == rht && cube.arr[1][1][0] == btm) {
             moves = "R U Rw U R' R'";
         }
         // The edge is between back & right. Orientation is correct.
-        else if (cube.arr[2][1][0] == btm && cube.arr[1][1][2] == rgc) {
+        else if (cube.arr[2][1][0] == btm && cube.arr[1][1][2] == rht) {
             moves = "R";
         }
         // The edge is between back & right. Orientation is not correct.
-        else if (cube.arr[2][1][0] == rgc && cube.arr[1][1][2] == btm) {
+        else if (cube.arr[2][1][0] == rht && cube.arr[1][1][2] == btm) {
             moves = "R' U Rw U R' R'";
         }
         // The edge is between top & right. Orientation is correct.
-        else if (cube.arr[4][1][2] == btm && cube.arr[1][0][1] == rgc) {
+        else if (cube.arr[4][1][2] == btm && cube.arr[1][0][1] == rht) {
             moves = "R R";
         }
         // The edge is between top & right. Orientation is not correct.
-        else if (cube.arr[4][1][2] == rgc && cube.arr[1][0][1] == btm) {
+        else if (cube.arr[4][1][2] == rht && cube.arr[1][0][1] == btm) {
             moves = "U Rw U R' R'";
         }
         // The edge is between top & front. Orientation is correct.
-        else if (cube.arr[4][2][1] == btm && cube.arr[0][0][1] == rgc) {
+        else if (cube.arr[4][2][1] == btm && cube.arr[0][0][1] == rht) {
             moves = "U' R R";
         }
         // The edge is between top & front. Orientation is not correct.
-        else if (cube.arr[4][2][1] == rgc && cube.arr[0][0][1] == btm) {
+        else if (cube.arr[4][2][1] == rht && cube.arr[0][0][1] == btm) {
             moves = "M' U R R";
         }
         // The edge is between top & left. Orientation is correct.
-        else if (cube.arr[4][1][0] == btm && cube.arr[3][0][1] == rgc) {
+        else if (cube.arr[4][1][0] == btm && cube.arr[3][0][1] == rht) {
             moves = "U' U' R R";
         }
         // The edge is between top & left. Orientation is not correct.
-        else if (cube.arr[4][2][1] == rgc && cube.arr[0][0][1] == btm) {
+        else if (cube.arr[4][2][1] == rht && cube.arr[0][0][1] == btm) {
             moves = "U M' U' R R";
         }
         // The edge is between top & back. Orientation is correct.
-        else if (cube.arr[4][0][1] == btm && cube.arr[2][0][1] == rgc) {
+        else if (cube.arr[4][0][1] == btm && cube.arr[2][0][1] == rht) {
             moves = "U R R";
         }
         // The edge is between top & back. Orientation is not correct.
-        else if (cube.arr[4][0][1] == rgc && cube.arr[2][0][1] == btm) {
+        else if (cube.arr[4][0][1] == rht && cube.arr[2][0][1] == btm) {
             moves = "M' U' R R";
         }
         // The edge is between bottom & back. Orientation is correct.
-        else if (cube.arr[5][2][1] == btm && cube.arr[2][2][1] == rgc) {
+        else if (cube.arr[5][2][1] == btm && cube.arr[2][2][1] == rht) {
             moves = "M' M' U' R R";
         }
         // The edge is between bottom & back. Orientation is not correct.
-        else if (cube.arr[5][2][1] == rgc && cube.arr[2][2][1] == btm) {
+        else if (cube.arr[5][2][1] == rht && cube.arr[2][2][1] == btm) {
             moves = "M U R R";
         }
         // The edge is between bottom & front. Orientation is correct.
-        else if (cube.arr[5][0][1] == btm && cube.arr[0][2][1] == rgc) {
+        else if (cube.arr[5][0][1] == btm && cube.arr[0][2][1] == rht) {
             moves = "M' M' U R R";
         }
         // The edge is between bottom & front. Orientation is not correct.
-        else if (cube.arr[5][0][1] == rgc && cube.arr[0][2][1] == btm) {
+        else if (cube.arr[5][0][1] == rht && cube.arr[0][2][1] == btm) {
             moves = "M' U' R R";
         }
 
@@ -494,65 +526,65 @@ public class Roux {
         String moves = "";
         String mv = "";
         // F-R
-        if (cube.arr[0][1][2] == fnt && cube.arr[1][1][0] == rgc
-                || cube.arr[0][1][2] == rgc && cube.arr[1][1][0] == fnt) {
+        if (cube.arr[0][1][2] == fnt && cube.arr[1][1][0] == rht
+                || cube.arr[0][1][2] == rht && cube.arr[1][1][0] == fnt) {
             mv = "R U R' M ";
         }
         // R-G
-        else if (cube.arr[2][1][0] == fnt && cube.arr[1][1][2] == rgc
-                || cube.arr[2][1][0] == rgc && cube.arr[1][1][2] == fnt) {
+        else if (cube.arr[2][1][0] == fnt && cube.arr[1][1][2] == rht
+                || cube.arr[2][1][0] == rht && cube.arr[1][1][2] == fnt) {
             mv = "R' U R M ";
         }
         // Bottom-Back
-        else if (cube.arr[2][2][1] == fnt && cube.arr[5][2][1] == rgc
-                || cube.arr[2][2][1] == rgc && cube.arr[5][2][1] == fnt) {
+        else if (cube.arr[2][2][1] == fnt && cube.arr[5][2][1] == rht
+                || cube.arr[2][2][1] == rht && cube.arr[5][2][1] == fnt) {
             mv = "M' ";
         }
 
         moves += mv;
         moveExecutor(cube, mv);
         for (int i = 0; i < 3; i++) {
-            if (isEgdeAtLoadPoint(cube, rgc, fnt))
+            if (isEgdeAtLoadPoint(cube, rht, fnt))
                 break;
             mv = "M ";
             moves += mv;
             moveExecutor(cube, mv);
         }
-        if (!isEgdeAtLoadPoint(cube, rgc, fnt)) {
+        if (!isEgdeAtLoadPoint(cube, rht, fnt)) {
             mv = "U ";
             moves += mv;
             moveExecutor(cube, mv);
         }
         for (int i = 0; i < 3; i++) {
-            if (isEgdeAtLoadPoint(cube, rgc, fnt))
+            if (isEgdeAtLoadPoint(cube, rht, fnt))
                 break;
             mv = "M ";
             moves += mv;
             moveExecutor(cube, mv);
         }
-        if (!isLoadPointOriented(cube, fnt, rgc)) {
+        if (!isLoadPointOriented(cube, fnt, rht)) {
             mv = "M' U U M M ";
             moves += mv;
             moveExecutor(cube, mv);
         }
-        if (isPairCornerExistsAt(cube, fnt, rgc, btm, "FRD")) {
+        if (isPairCornerExistsAt(cube, fnt, rht, btm, "FRD")) {
             mv = "R U R' ";
             moves += mv;
             moveExecutor(cube, mv);
         }
-        if (isPairCornerExistsAt(cube, fnt, rgc, btm, "BRD")) {
+        if (isPairCornerExistsAt(cube, fnt, rht, btm, "BRD")) {
             mv = "R' U U R ";
             moves += mv;
             moveExecutor(cube, mv);
         }
         for (int i = 0; i < 3; i++) {
-            if (isPairCornerExistsAt(cube, fnt, rgc, btm, "FLT"))
+            if (isPairCornerExistsAt(cube, fnt, rht, btm, "FLT"))
                 break;
             mv = "U ";
             moves += mv;
             moveExecutor(cube, mv);
         }
-        while (!isCornerOrientedForPairing(cube, rgc, btm, fnt, "FLT")) {
+        while (!isCornerOrientedForPairing(cube, rht, btm, fnt, "FLT")) {
             mv = "R U' U' R' U ";
             moves += mv;
             moveExecutor(cube, mv);
@@ -567,11 +599,11 @@ public class Roux {
     public void insertSecondPair2(Cube cube) {
         String moves = "";
         String mv = "";
-        if (cube.arr[2][1][0] == bck && cube.arr[1][1][2] == rgc
-                || cube.arr[2][1][0] == rgc && cube.arr[1][1][2] == bck) {
+        if (cube.arr[2][1][0] == bck && cube.arr[1][1][2] == rht
+                || cube.arr[2][1][0] == rht && cube.arr[1][1][2] == bck) {
             mv = "R' U M R ";
-        } else if (cube.arr[2][2][1] == bck && cube.arr[5][2][1] == rgc
-                || cube.arr[2][2][1] == rgc && cube.arr[5][2][1] == bck) {
+        } else if (cube.arr[2][2][1] == bck && cube.arr[5][2][1] == rht
+                || cube.arr[2][2][1] == rht && cube.arr[5][2][1] == bck) {
             mv = "M' ";
         }
 
@@ -579,44 +611,44 @@ public class Roux {
         moveExecutor(cube, mv);
 
         for (int i = 0; i < 3; i++) {
-            if (isEgdeAtLoadPoint(cube, rgc, bck))
+            if (isEgdeAtLoadPoint(cube, rht, bck))
                 break;
             mv = "M ";
             moves += mv;
             moveExecutor(cube, mv);
         }
-        if (!isEgdeAtLoadPoint(cube, rgc, bck)) {
+        if (!isEgdeAtLoadPoint(cube, rht, bck)) {
             mv = "U ";
             moves += mv;
             moveExecutor(cube, mv);
         }
         for (int i = 0; i < 3; i++) {
-            if (isEgdeAtLoadPoint(cube, rgc, bck))
+            if (isEgdeAtLoadPoint(cube, rht, bck))
                 break;
             mv = "M ";
             moves += mv;
             moveExecutor(cube, mv);
         }
 
-        if (!isLoadPointOriented(cube, bck, rgc)) {
+        if (!isLoadPointOriented(cube, bck, rht)) {
             mv = "M' U U M M ";
             moves += mv;
             moveExecutor(cube, mv);
         }
 
-        if (isPairCornerExistsAt(cube, bck, rgc, btm, "BRD")) {
+        if (isPairCornerExistsAt(cube, bck, rht, btm, "BRD")) {
             mv = "R' U U R U' ";
             moves += mv;
             moveExecutor(cube, mv);
         }
         for (int i = 0; i < 3; i++) {
-            if (isPairCornerExistsAt(cube, bck, rgc, btm, "FRT"))
+            if (isPairCornerExistsAt(cube, bck, rht, btm, "FRT"))
                 break;
             mv = "U ";
             moves += mv;
             moveExecutor(cube, mv);
         }
-        while (!isCornerOrientedForPairing(cube, rgc, btm, bck, "FRT")) {
+        while (!isCornerOrientedForPairing(cube, rht, btm, bck, "FRT")) {
             mv = "U' R' U R U' ";
             moves += mv;
             moveExecutor(cube, mv);
@@ -833,8 +865,8 @@ public class Roux {
                     leftOk = true;
                 }
             }
-            if (cube.arr[0][0][1] == rgc && cube.arr[4][2][1] == top
-                    || cube.arr[0][0][1] == top && cube.arr[4][2][1] == rgc) {
+            if (cube.arr[0][0][1] == rht && cube.arr[4][2][1] == top
+                    || cube.arr[0][0][1] == top && cube.arr[4][2][1] == rht) {
                 if (cube.arr[0][0][1] == cube.arr[0][0][0] && cube.arr[0][0][1] == cube.arr[0][0][2]) {
                     rightOk = true;
                 }
@@ -844,7 +876,7 @@ public class Roux {
         if (leftOk && rightOk) {
             if (cube.arr[0][0][1] == lft) {
                 mv = "U ";
-            } else if (cube.arr[0][0][1] == rgc) {
+            } else if (cube.arr[0][0][1] == rht) {
                 mv = "U' ";
             } else if (cube.arr[0][0][1] == bck) {
                 mv = "U U ";
@@ -855,7 +887,7 @@ public class Roux {
             moveExecutor(cube, mv);
         } else {
             for (int i = 0; i < 4; i++) {
-                if (cube.arr[0][0][1] == lft || cube.arr[0][0][1] == rgc) {
+                if (cube.arr[0][0][1] == lft || cube.arr[0][0][1] == rht) {
                     mv = "M' M' ";
                     moves += mv;
                     moveExecutor(cube, mv);
@@ -867,9 +899,9 @@ public class Roux {
             }
             if (cube.arr[0][2][1] == lft) {
                 // We have to bring the top-right edge to the opposite loading spot.
-                if (cube.arr[2][2][1] != rgc) {
+                if (cube.arr[2][2][1] != rht) {
                     for (int i = 0; i < 4; i++) {
-                        if (cube.arr[2][0][1] == rgc)
+                        if (cube.arr[2][0][1] == rht)
                             break;
                         mv = "U ";
                         moves += mv;
@@ -880,7 +912,7 @@ public class Roux {
                     moveExecutor(cube, mv);
                 }
                 for (int i = 0; i < 4; i++) {
-                    if (cube.arr[0][0][0] == rgc)
+                    if (cube.arr[0][0][0] == rht)
                         break;
                     mv = "U ";
                     moves += mv;
@@ -889,7 +921,7 @@ public class Roux {
                 mv = "M' M' U' ";
                 moves += mv;
                 moveExecutor(cube, mv);
-            } else if (cube.arr[0][2][1] == rgc) {
+            } else if (cube.arr[0][2][1] == rht) {
                 // We have to bring the top-right edge to the opposite loading spot.
                 if (cube.arr[2][2][1] != lft) {
                     for (int i = 0; i < 4; i++) {
@@ -915,9 +947,9 @@ public class Roux {
                 moveExecutor(cube, mv);
             } else if (cube.arr[2][2][1] == lft) {
                 // We have to bring the top-right edge to the opposite loading spot.
-                if (cube.arr[0][2][1] != rgc) {
+                if (cube.arr[0][2][1] != rht) {
                     for (int i = 0; i < 4; i++) {
-                        if (cube.arr[0][0][1] == rgc)
+                        if (cube.arr[0][0][1] == rht)
                             break;
                         mv = "U ";
                         moves += mv;
@@ -928,7 +960,7 @@ public class Roux {
                     moveExecutor(cube, mv);
                 }
                 for (int i = 0; i < 4; i++) {
-                    if (cube.arr[2][0][0] == rgc)
+                    if (cube.arr[2][0][0] == rht)
                         break;
                     mv = "U ";
                     moves += mv;
@@ -937,7 +969,7 @@ public class Roux {
                 mv = "M' M' U ";
                 moves += mv;
                 moveExecutor(cube, mv);
-            } else if (cube.arr[2][2][1] == rgc) {
+            } else if (cube.arr[2][2][1] == rht) {
                 // We have to bring the top-right edge to the opposite loading spot.
                 if (cube.arr[0][2][1] != lft) {
                     for (int i = 0; i < 4; i++) {
@@ -963,17 +995,18 @@ public class Roux {
                 moveExecutor(cube, mv);
             }
         }
-        moves+=adjustMiddleSliceCentres(cube);
+        moves += adjustMiddleSliceCentres(cube);
         return moves;
     }
 
     public boolean last4EdgesDFS(Cube cube, String prevMove, String path, int depth, int MAX_DEPTH, String[] moves) {
-        if(cube.isSolved()) {
-            moves[0]=path;
+        if (cube.isSolved()) {
+            moves[0] = path;
             return true;
         }
-        if(depth>MAX_DEPTH) return false;
-        if (!prevMove.equals("U U ") && prevMove.length()>0) {
+        if (depth > MAX_DEPTH)
+            return false;
+        if (!prevMove.equals("U U ") && prevMove.length() > 0) {
             cube.moveU();
             cube.moveU();
             if (last4EdgesDFS(cube, "U U ", path + "U U ", depth + 1, MAX_DEPTH, moves)) {
@@ -1000,9 +1033,9 @@ public class Roux {
     }
 
     public String lastFourMiddleEdges(Cube cube) {
-        String[] moves=new String[1];
-        for(int MAX_DEPTH=0; MAX_DEPTH<=10; MAX_DEPTH++) {
-            if(last4EdgesDFS(cube, "", "", 0, MAX_DEPTH, moves))
+        String[] moves = new String[1];
+        for (int MAX_DEPTH = 0; MAX_DEPTH <= 10; MAX_DEPTH++) {
+            if (last4EdgesDFS(cube, "", "", 0, MAX_DEPTH, moves))
                 break;
         }
         return moveOptimizer(moves[0]);
@@ -1051,7 +1084,7 @@ public class Roux {
         moves += convertToGoodEdges(cube);
         moves = moveOptimizer(moves);
         System.out.println("GOOD EDGE: " + moves);
-        moves=solveLeftRightFaces(cube);
+        moves = solveLeftRightFaces(cube);
         moves = moveOptimizer(moves);
         System.out.println("L-R FACE: " + moves);
         moves = lastFourMiddleEdges(cube);
@@ -1065,8 +1098,8 @@ public class Roux {
         CMLL(cube);
         PLL(cube);
         LSE(cube);
-        if(cube.isSolved()) {
-            System.out.println("CONGRATULATIONS!! CUBE IS SOLVED.");
+        if (cube.isSolved()) {
+            System.out.println("CONGRATULATIONS!! CUBE IS SOLVED IN "+totalMoveCount+" MOVES.");
         }
     }
 
