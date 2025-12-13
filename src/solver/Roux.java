@@ -391,6 +391,7 @@ public class Roux {
                 || cube.arr[1][2][1] == lft && cube.arr[5][1][2] == bck) {
             mv = "R R ";
         }
+
         moves += mv;
         moveExecutor(cube, mv);
         for (int i = 0; i < 3; i++) {
@@ -400,11 +401,13 @@ public class Roux {
             moves += mv;
             moveExecutor(cube, mv);
         }
+
         if (!isEgdeAtLoadPoint(cube, lft, bck)) {
             mv = "U ";
             moves += mv;
             moveExecutor(cube, mv);
         }
+
         for (int i = 0; i < 3; i++) {
             if (isEgdeAtLoadPoint(cube, lft, bck))
                 break;
@@ -419,6 +422,11 @@ public class Roux {
         }
         if (isPairCornerExistsAt(cube, bck, lft, btm, "BLD")) {
             mv = "L U' L' ";
+            moves += mv;
+            moveExecutor(cube, mv);
+        }
+        if (isPairCornerExistsAt(cube, bck, lft, btm, "BRD")) {
+            mv = "R' ";
             moves += mv;
             moveExecutor(cube, mv);
         }
