@@ -20,6 +20,8 @@ public class Roux {
         String[] arr = moves.split(" ");
         for (String mv : arr) {
             switch (mv) {
+                case "":
+                    break;
                 case "U":
                     cube.moveU();
                     break;
@@ -74,6 +76,7 @@ public class Roux {
         StringBuilder sb=new StringBuilder();
         int cnt=0;
         for(int i=0; i<arr.length; i++) {
+            if(arr[i].length()==0) continue;
             if(i<arr.length-1 && arr[i].equals(arr[i+1])) {
                 sb.append(arr[i]+"2 ");
                 i++;
@@ -682,17 +685,18 @@ public class Roux {
         // Ensure that there will be exactly 1 top color after a sune.
         if (goodCornerCnt != 1) {
             // BLT_B, BRT_R, FRT_F, FLT_T
-            char[] upcoming = new char[] { cube.arr[2][0][2], cube.arr[1][0][2], cube.arr[0][0][2], cube.arr[0][2][0] };
+            char[] upcoming = new char[] { cube.arr[2][0][2], cube.arr[1][0][2], cube.arr[0][0][2], cube.arr[4][2][0] };
             int cnt2 = 0;
             for (char ch : upcoming)
                 if (ch == top)
                     cnt2++;
+
             while (cnt2 != 1) {
                 mv = "U ";
                 moves += mv;
                 moveExecutor(cube, mv);
                 cnt2 = 0;
-                upcoming = new char[] { cube.arr[2][0][2], cube.arr[1][0][2], cube.arr[0][0][2], cube.arr[0][2][0] };
+                upcoming = new char[] { cube.arr[2][0][2], cube.arr[1][0][2], cube.arr[0][0][2], cube.arr[4][2][0] };
                 for (char ch : upcoming)
                     if (ch == top)
                         cnt2++;
@@ -1033,7 +1037,7 @@ public class Roux {
     }
 
     public String lastFourMiddleEdges(Cube cube) {
-        String[] moves = new String[1];
+        String[] moves = new String[] {""};
         for (int MAX_DEPTH = 0; MAX_DEPTH <= 10; MAX_DEPTH++) {
             if (last4EdgesDFS(cube, "", "", 0, MAX_DEPTH, moves))
                 break;
