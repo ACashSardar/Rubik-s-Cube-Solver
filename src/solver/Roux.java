@@ -1,25 +1,21 @@
 package solver;
 
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 
 public class Roux {
-
 
     /**
      * 1. 1st Block -- IDDFS
      * 2. 2nd Block -- IDDFS
      * 3. CMLL -- Programmatic cube inspection
-     * 4. PLL -- Programmatic cube inspection
-     * 5. LSE -- IDDFS
+     * 4. LSE -- IDDFS
      **/
-
 
     int totalMoveCount = 0;
     char fnt, btm, lft, rht, top, bck;
-
+    static Map<String, String> algoMap=new HashMap<>();
 
     public Roux(solver.Cube cube) {
         fnt = cube.colorMap[0];
@@ -28,6 +24,11 @@ public class Roux {
         lft = cube.colorMap[3];
         top = cube.colorMap[4];
         btm = cube.colorMap[5];
+        algoMap.put("SUNE", "R U R' U R U U R'");
+        algoMap.put("ANTISUNE", "R U U R' U' R U' R'");
+        algoMap.put("SUNE_REV", "R U' U' R' U' R U' R'");
+        algoMap.put("ANTISUNE_REV", "R U R' U R U' U' R'");
+        algoMap.put("JPERM", "R U R' F' R U R' U' R' F R R U' R'");
     }
 
 
@@ -155,7 +156,7 @@ public class Roux {
                         step.equals("Step:SBFP") && checkSecondBlockFirstPair(cube) ||
                         step.equals("Step:SBSP") && checkSecondBlockSecondPair(cube)))
                 ||
-                (RouxStep == 5 && cube.isSolved())) {
+                (RouxStep == 4 && cube.isSolved())) {
             moves[0] = path;
             return true;
         }
@@ -180,7 +181,6 @@ public class Roux {
 
 
     // -------------------- BLOCK BUILDING STEPS --------------------//
-
 
     public boolean checkLeftBottomEdge(Cube cube) {
         return cube.arr[3][2][1] == lft && cube.arr[5][1][0] == btm;
@@ -223,17 +223,15 @@ public class Roux {
 
 
     public void FirstBlock(Cube cube) {
-        System.out.println("BUILD THE FIRST BLOCK");
-        System.out.println("----------------------------------------");
+        System.out.println("FIRST BLOCK\n----------------------------------------");
         String ans = "";
         String[] moves = { "$" };
         List<String> listOfSteps = Arrays.asList("Step:LBE", "Step:FBFP", "Step:FBSP");
         List<String> allowedMoves = Arrays.asList("U", "U'", "F", "F'", "L", "L'", "R", "R'", "M", "M'", "D", "D'");
-        int MAX_DEPTH = 6;
         int buildCount = 0;
         for (String step : listOfSteps) {
-            for (int depth = 0; depth <= MAX_DEPTH; depth++) {
-                if (IDDFS(cube, "", "", depth, MAX_DEPTH, allowedMoves, step, moves, 1)) {
+            for (int MAX_DEPTH = 0; MAX_DEPTH <= 10; MAX_DEPTH++) {
+                if (IDDFS(cube, "", "", 0, MAX_DEPTH, allowedMoves, step, moves, 1)) {
                     ans += moves[0];
                     buildCount++;
                     break;
@@ -242,26 +240,23 @@ public class Roux {
         }
         if (buildCount == 3) {
             ans = moveOptimizer(ans);
-            System.out.println(ans);
+            System.out.println("Steps: "+ans);
         } else {
             System.out.println("FIRST BLOCK FAILED!!");
         }
         System.out.println();
     }
 
-
     public void SecondBlock(Cube cube) {
-        System.out.println("BUILD THE SECOND BLOCK");
-        System.out.println("----------------------------------------");
+        System.out.println("SECOND BLOCK\n----------------------------------------");
         String ans = "";
         String[] moves = { "$" };
         List<String> listOfSteps = Arrays.asList("Step:RBE", "Step:SBFP", "Step:SBSP");
         List<String> allowedMoves = Arrays.asList("U", "U'", "R", "R'", "M", "M'", "Rw", "Rw'");
-        int MAX_DEPTH = 8;
         int buildCount = 0;
         for (String step : listOfSteps) {
-            for (int depth = 0; depth <= MAX_DEPTH; depth++) {
-                if (IDDFS(cube, "", "", depth, MAX_DEPTH, allowedMoves, step, moves, 2)) {
+            for (int MAX_DEPTH = 0; MAX_DEPTH <= 10; MAX_DEPTH++) {
+                if (IDDFS(cube, "", "", 0, MAX_DEPTH, allowedMoves, step, moves, 2)) {
                     ans += moves[0];
                     buildCount++;
                     break;
@@ -270,79 +265,64 @@ public class Roux {
         }
         if (buildCount == 3) {
             ans = moveOptimizer(ans);
-            System.out.println(ans);
+            System.out.println("Steps: "+ans);
         } else {
             System.out.println("SECOND BLOCK FAILED!!");
         }
         System.out.println();
     }
 
-
     // -------------------- CMLL STEPS --------------------//
-    public int countGoodCorners(Cube cube) {
-        int cnt = 0;
-        // 4 U moves = Effectively no move.
-        for (int i = 0; i < 4; i++) {
-            if (cube.arr[4][2][0] == top)
-                cnt++;
-            cube.moveU();
-        }
-        return cnt;
+    public boolean areCornersOriented(Cube cube){
+        return cube.arr[4][0][0]==top && cube.arr[4][0][2]==top && cube.arr[4][2][0]==top && cube.arr[4][2][2]==top;
     }
 
-
-    public String sune(Cube cube) {
-        StringBuilder moves = new StringBuilder();
-        String mv = "";
-
-
-        int goodCornerCnt = countGoodCorners(cube);
-        if (goodCornerCnt == 4) {
-            return "";
+    public boolean orientCorners(Cube cube, String path, int depth, int MAX_DEPTH, List<String> allowedMoves, String[] moves){
+        if(areCornersOriented(cube)){
+            moves[0]=path;
+            return true;
         }
-
-
-        // Ensure that there will be exactly 1 top color after a sune.
-        if (goodCornerCnt != 1) {
-            // BLT_B, BRT_R, FRT_F, FLT_T
-            char[] upcoming = new char[] { cube.arr[2][0][2], cube.arr[1][0][2], cube.arr[0][0][2], cube.arr[4][2][0] };
-            int cnt2 = 0;
-            for (char ch : upcoming)
-                if (ch == top)
-                    cnt2++;
-
-
-            while (cnt2 != 1) {
-                mv = "U ";
-                moves.append(mv);
-                moveExecutor(cube, mv);
-                cnt2 = 0;
-                upcoming = new char[] { cube.arr[2][0][2], cube.arr[1][0][2], cube.arr[0][0][2], cube.arr[4][2][0] };
-                for (char ch : upcoming)
-                    if (ch == top)
-                        cnt2++;
+        if(depth>MAX_DEPTH){
+            return false;
+        }
+        for(String mv: allowedMoves){
+            String actualMove="";
+            String actualMove_inv="";
+            switch(mv){
+                case "SUNE":
+                    actualMove=algoMap.get("SUNE");
+                    actualMove_inv=algoMap.get("SUNE_REV");
+                    break;
+                case "ANTISUNE":
+                    actualMove=algoMap.get("ANTISUNE");
+                    actualMove_inv=algoMap.get("ANTISUNE_REV");
+                    break;
+                case "U":
+                    actualMove="U";
+                    actualMove_inv="U'";
+                    break;
+                case "U'":
+                    actualMove="U'";
+                    actualMove_inv="U";
+                    break;
+                case "U U":
+                    actualMove="U U";
+                    actualMove_inv="U' U'";
+                    break;
+                default:
+                    break;
             }
-            mv = "R U R' U R U U R' ";
-            moves.append(mv);
-            moveExecutor(cube, mv);
+            moveExecutor(cube, actualMove);
+            if(orientCorners(cube, path+actualMove+" ", depth+1, MAX_DEPTH, allowedMoves, moves)){
+                return true;
+            }
+            moveExecutor(cube, actualMove_inv);
         }
-        // Bring the top piece to the Front-Top-Left corner with some U moves.
-        // System.out.println("b mv=" + cube.arr[4][2][0]);
-        while (cube.arr[4][2][0] != top) {
-            mv = "U ";
-            moves.append(mv);
-            moveExecutor(cube, mv);
-        }
-        // apply sune again.
-        mv = "R U R' U R U U R' ";
-        moves.append(mv);
-        moveExecutor(cube, mv);
-        return moves.toString() + sune(cube);
+        return false;
     }
-
 
     public String JPerm(Cube cube) {
-        // base case - 4 mathing headlights found
+        // base case - 4 matching headlights found
         boolean allHeadlightsFound = true;
         for (int i = 0; i < 4; i++) {
             if (cube.arr[i][0][0] != cube.arr[i][0][2])
@@ -365,7 +345,25 @@ public class Roux {
         return moves.toString() + JPerm(cube);
     }
 
+    public void CMLL(Cube cube) {
+        System.out.println("CMLL");
+        System.out.println("----------------------------------------");
+        String[] moves={"$"};
+        List<String> allowedMoves=Arrays.asList("U", "U'", "SUNE", "ANTISUNE");
+        for(int MAX_DEPTH=0; MAX_DEPTH<=100; MAX_DEPTH++) {
+            if(orientCorners(cube, "", 0, MAX_DEPTH, allowedMoves, moves))
+                break;
+        }
+        moves[0] = moveOptimizer(moves[0]);
+        System.out.println("Corners: " + moves[0]);
+        moves[0] = JPerm(cube);
+        moves[0] = moveOptimizer(moves[0]);
+        System.out.println("JPerm: " + moves[0]);
+        System.out.println();
+    }
 
+
+    // -------------------- LSE STEPS --------------------//
     public String adjustMiddleSliceCentres(Cube cube) {
         String moves = "";
         String mv = "";
@@ -450,7 +448,6 @@ public class Roux {
             }
         } else if (badEdges == 4) {
 
-
             // 1. All the bad edges are on the top
             if (topBadEdges == 4) {
                 mv = "M' U U M ";
@@ -479,12 +476,15 @@ public class Roux {
                 moves.append(mv);
                 moveExecutor(cube, mv);
             } else { // 2 on top & 2 at bottom
-                mv = "U M' U U M ";
+                while(isBadEdge(cube, 4, 2, 1)){
+                    mv = "U ";
+                    moves.append(mv);
+                    moveExecutor(cube, mv);
+                }
+                mv = "M' U U M ";
                 moves.append(mv);
                 moveExecutor(cube, mv);
             }
-
-
         } else if (badEdges == 6) {
             mv = "M' U M' ";
             moves.append(mv);
@@ -644,36 +644,15 @@ public class Roux {
 
 
     public String lastFourMiddleEdges(Cube cube) {
-        String[] moves = { "" };
+        String[] moves = { "$" };
         List<String> allowedSteps = Arrays.asList("M", "M'", "U");
-        int MAX_DEPTH = 10;
-        for (int depth = 0; depth <= MAX_DEPTH; depth++) {
-            if (IDDFS(cube, "", "", 0, depth, allowedSteps, null, moves, 5))
+        for (int MAX_DEPTH = 0; MAX_DEPTH <= 100; MAX_DEPTH++) {
+            if (IDDFS(cube, "", "", 0, MAX_DEPTH, allowedSteps, null, moves, 4)) {
                 break;
+            }
         }
         return moveOptimizer(moves[0]);
     }
-
-
-    public void CMLL(Cube cube) {
-        System.out.println("CMLL");
-        System.out.println("----------------------------------------");
-        String moves = sune(cube);
-        moves = moveOptimizer(moves);
-        System.out.println("SUNE: " + moves);
-        System.out.println();
-    }
-
-
-    public void PLL(Cube cube) {
-        System.out.println("PLL");
-        System.out.println("----------------------------------------");
-        String moves = JPerm(cube);
-        moves = moveOptimizer(moves);
-        System.out.println("JPERM: " + moves);
-        System.out.println();
-    }
-
 
     public void LSE(Cube cube) {
         System.out.println("LSE");
@@ -681,12 +660,12 @@ public class Roux {
         String moves = adjustMiddleSliceCentres(cube);
         moves += convertToGoodEdges(cube);
         moves = moveOptimizer(moves);
-        System.out.println("GOOD EDGE: " + moves);
+        System.out.println("EO (Edge Orientation): " + moves);
         moves = solveLeftRightFaces(cube);
         moves = moveOptimizer(moves);
-        System.out.println("L-R FACE: " + moves);
+        System.out.println("UL UR Edges: " + moves);
         moves = lastFourMiddleEdges(cube);
-        System.out.println("LAST 4 MIDDLE EDGE: " + moves);
+        System.out.println("Last 4 Edges Permutations: " + moves);
         System.out.println();
     }
 
@@ -695,7 +674,6 @@ public class Roux {
         FirstBlock(cube);
         SecondBlock(cube);
         CMLL(cube);
-        PLL(cube);
         LSE(cube);
         if (cube.isSolved()) {
             System.out.println("CONGRATULATIONS!! CUBE IS SOLVED IN " + totalMoveCount +
