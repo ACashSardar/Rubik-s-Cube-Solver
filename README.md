@@ -4,6 +4,7 @@
 
 A step-by-step, beginner-friendly Rubik’s Cube solver implemented using the ROUX method.
 This project focuses on creating an intuitive, human-like solving approach rather than finding the shortest possible move sequence.
+Here, the average move count to solve the cube is about 70-80 moves.
 
 <h3>📌 Project Goal</h3>
 
